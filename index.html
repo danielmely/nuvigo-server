@@ -42,7 +42,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 -apple-system
 .h{font-size:20px;font-weight:500;padding:14px 14px 6px}
 .pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 14px}
 .bw{display:flex;flex-direction:column;min-height:100%}
-.cats{flex:1;min-height:420px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:12px;padding:8px 14px 14px}
+.top{display:flex;flex-direction:column;height:calc(var(--sh,700px) - 112px);min-height:520px}.cats{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:12px;padding:8px 14px 14px}
 .sep{border:0;border-top:1px solid var(--text2);opacity:.55;margin:2px 14px 12px}.more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 14px 14px}
 .more .cw{min-height:170px}
 .cw{display:flex;flex-direction:column;gap:6px;min-height:0;cursor:pointer}.cw .cat{flex:1;min-height:0}.cw .lb{height:34px}.cw .lb b{display:block;font-weight:500;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cw .lb span{display:block;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cat{border-radius:16px;padding:10px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-start;color:#fff;position:relative;overflow:hidden;isolation:isolate;background:#222;-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translateZ(0)}
@@ -131,7 +131,7 @@ function browse(){
   if(n=='New releases')return hd+grid(MOV.filter(function(m){return m[1]!='Series'&&m[2]>=2024}).sort(function(a,b){return b[2]-a[2]}));
   var l=MOV.filter(function(m,k){return n=='Movies'?m[1]!='Series':n=='Series'?m[1]=='Series':k%2==s.cat%2||k<4});
   return hd+'<div class="sw">'+['All','Newest','Top rated'].map(function(x){return '<span class="pill '+(s.f==x?'on':'')+'" data-f="'+x+'">'+x+'</span>'}).join('')+'</div>'+grid(s.f=='Newest'?l.slice().sort(function(a,b){return b[2]-a[2]}):l)}
- return '<div class="bw">'+ban()+'<div class="h">Dashboard</div><div class="cats">'+CATS.map(function(x,k){return card(x,k)}).join('')+'</div><hr class="sep"><div class="more">'+MORE.slice(0,3).map(function(x,k){return card(x,k+10)}).join('')+'</div><hr class="sep"><div class="more">'+MORE.slice(3).map(function(x,k){return card(x,k+13)}).join('')+'</div></div>'}
+ return '<div class="bw"><div class="top">'+ban()+'<div class="h">Dashboard</div><div class="cats">'+CATS.map(function(x,k){return card(x,k)}).join('')+'</div></div><hr class="sep"><div class="more">'+MORE.slice(0,3).map(function(x,k){return card(x,k+10)}).join('')+'</div><hr class="sep"><div class="more">'+MORE.slice(3).map(function(x,k){return card(x,k+13)}).join('')+'</div></div>'}
 var SVC=[['Netflix','#e50914,#730008',8],['Apple TV+','#404040,#0a0a0a',350],['Prime Video','#00a8e0,#00478c',9],['Disney+','#123399,#05124d',337],['Max','#5a29d9,#1f0d73',1899],['Hulu','#1ce783,#05733f',15],['Paramount+','#0064ff,#002a8c',531],['Peacock','#f2bf00,#994d00',386],['Crunchyroll','#f57521,#9e3805',283],['Starz','#292929,#000',43],['AMC+','#000,#40404d',526],['MGM+','#cc9e1a,#594000',583],['Discovery+','#0059f2,#001f73',520],['Shudder','#bf0000,#2e0000',99],['Tubi','#fa5933,#731a66',73],['Pluto TV','#f2d900,#402e8c',300]];
 var GEN=[['Action','💥'],['Adventure','🧭'],['Animation','🎨'],['Comedy','😂'],['Crime','🕵️'],['Documentary','🎥'],['Drama','🎭'],['Family','👨‍👩‍👧'],['Fantasy','🧙'],['History','🏛️'],['Horror','👻'],['Kids','🧸'],['Music','🎵'],['Mystery','🔍'],['News','📰'],['Reality','📸'],['Romance','💕'],['Sci-Fi','🚀'],['Talk Show','🎙️'],['Thriller','😱'],['War','🪖'],['Western','🤠']];
 var PLOGO={};
@@ -169,7 +169,7 @@ function player(k){return '<div style="background:#111;color:#fff;height:100%;di
 function fit(){var bs=document.querySelectorAll('#bar button');var sz=11;
  bs.forEach(function(b){var l=b.querySelector('.lb');l.style.fontSize='11px';var f=11;while(l.scrollWidth>b.clientWidth-6&&f>7){f-=0.5;l.style.fontSize=f+'px'}if(f<sz)sz=f});
  bs.forEach(function(b){b.querySelector('.lb').style.fontSize=sz+'px'})}
-function render(){var h;
+function render(){var h;document.documentElement.style.setProperty('--sh',document.getElementById('scr').clientHeight+'px');
  if(s.play!==null)h=player(s.play);
  else if(s.det!==null)h=detail(s.det);
  else if(s.tab=='browse')h=browse();
