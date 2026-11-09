@@ -21,16 +21,16 @@ function getJSON(url) {
   });
 }
 
-async function posterURL(title, year, type) {
+async function posterPath(title, year, type) {
   const k = `${type}|${title}|${year}`;
   if (cache.has(k)) return cache.get(k);
   const yearParam = type === 'tv' ? 'first_air_date_year' : 'year';
   const q = `https://api.themoviedb.org/3/search/${type}?api_key=${KEY}&query=${encodeURIComponent(title)}&${yearParam}=${encodeURIComponent(year)}`;
   const data = await getJSON(q);
   const hit = (data.results || []).find((r) => r.poster_path);
-  const url = hit ? `https://image.tmdb.org/t/p/w780${hit.poster_path}` : null;
-  cache.set(k, url);
-  return url;
+  const path = hit ? hit.poster_path : null;
+  cache.set(k, path);
+  return path;
 }
 
 async function info(title, year, type) {
@@ -47,7 +47,9 @@ async function info(title, year, type) {
       const n = Number(votes.replace(/,/g, ''));
       votes = n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
     }
-    out = { plot: ok(d.Plot), imdb: ok(d.imdbRating), votes, rt: rt ? rt.Value : null };
+    const director = ok(d.Director) ? d.Director.split(',')[0].replace(/\s*\(.*\)/, '').trim() : null;
+    const cast = ok(d.Actors) ? d.Actors.split(',').slice(0, 3).map((a) => a.trim()) : [];
+    out = { plot: ok(d.Plot), imdb: ok(d.imdbRating), votes, rt: rt ? rt.Value : null, director, cast };
   }
   infoCache.set(k, out);
   return out;
@@ -102,8 +104,10 @@ http.createServer(async (req, res) => {
     if (!KEY) { res.writeHead(404); return res.end(); }
     try {
       const type = u.searchParams.get('type') === 'tv' ? 'tv' : 'movie';
-      const url = await posterURL(u.searchParams.get('title') || '', u.searchParams.get('year') || '', type);
-      if (!url) { res.writeHead(404); return res.end(); }
+      const pp = await posterPath(u.searchParams.get('title') || '', u.searchParams.get('year') || '', type);
+      if (!pp) { res.writeHead(404); return res.end(); }
+      const size = u.searchParams.get('size') === 'original' ? 'original' : 'w780';
+      const url = `https://image.tmdb.org/t/p/${size}${pp}`;
       res.writeHead(302, { Location: url, 'Cache-Control': 'public, max-age=86400' });
       return res.end();
     } catch (e) { res.writeHead(502); return res.end(); }
