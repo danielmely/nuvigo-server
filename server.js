@@ -24,7 +24,7 @@ async function posterURL(title, year, type) {
   const q = `https://api.themoviedb.org/3/search/${type}?api_key=${KEY}&query=${encodeURIComponent(title)}&${yearParam}=${encodeURIComponent(year)}`;
   const data = await getJSON(q);
   const hit = (data.results || []).find((r) => r.poster_path);
-  const url = hit ? `https://image.tmdb.org/t/p/w342${hit.poster_path}` : null;
+  const url = hit ? `https://image.tmdb.org/t/p/w780${hit.poster_path}` : null;
   cache.set(k, url);
   return url;
 }
