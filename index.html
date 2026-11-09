@@ -341,7 +341,7 @@ function refreshAll(){if(rfBusy||document.getElementById('splash'))return;rfBusy
  for(var k=0;k<MOV.length&&urls.length<48;k++)if(!seen[k]){seen[k]=1;var m=MOV[k];urls.push('/api/poster?title='+encodeURIComponent(m[0])+'&year='+m[2]+'&type='+(m[1]=='Series'?'tv':'movie'))}
  var f=document.getElementById('pbf'),t=document.getElementById('pst'),sp=document.getElementById('splash'),n=0,t0=Date.now(),fin=false;
  var hi=0;function bar(p,msg){if(p<hi)return;hi=p;f.style.width=Math.round(p*100)+'%';if(msg)t.textContent=msg}
- function done(){if(fin)return;fin=true;bar(1,'Ready');setTimeout(function(){sp.classList.add('out');setTimeout(function(){sp.remove()},450)},300)}
+ function done(){if(fin)return;fin=true;bar(1,'Done!');setTimeout(function(){sp.classList.add('out');setTimeout(function(){sp.remove()},450)},300)}
  bar(.08,'Loading your add-ons…');
  setTimeout(function(){bar(.2,'Getting your catalogs…')},350);
  setTimeout(function(){bar(.3,'Loading every catalog…')},600);setTimeout(function(){bar(.4,'Checking ratings…')},1100);setTimeout(function(){bar(.5,'Getting details…')},1600);setTimeout(function(){bar(.6,'Finding links…')},2100);setTimeout(function(){bar(.7,'Caching covers…')},2600);
