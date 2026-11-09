@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const accounts = require('./accounts');
 
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const KEY = process.env.TMDB_API_KEY || '';
@@ -51,8 +52,24 @@ async function info(title, year, type) {
   return out;
 }
 
+// Accounts need DATABASE_URL and JWT_SECRET; without them the demo still runs and /api/auth/* says so.
+let acc = null;
+if (process.env.DATABASE_URL && process.env.JWT_SECRET) {
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: /railway\.internal|localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL) ? false : { rejectUnauthorized: false },
+  });
+  acc = accounts.create({ query: (t, p) => pool.query(t, p), secret: process.env.JWT_SECRET });
+  acc.init().then(() => console.log('accounts ready')).catch((e) => { console.error('accounts init failed', e); acc = null; });
+}
+
 http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
+  if (u.pathname === '/api/me' || u.pathname.startsWith('/api/auth/') || u.pathname.startsWith('/api/sync')) {
+    if (!acc) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end('{"error":"Accounts are not set up on this server yet."}'); }
+    if (await acc.handle(req, res, u)) return;
+  }
   if (u.pathname === '/api/info') {
     if (!OMDB) { res.writeHead(404); return res.end(); }
     try {
