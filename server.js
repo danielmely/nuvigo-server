@@ -79,7 +79,7 @@ http.createServer(async (req, res) => {
       const type = u.searchParams.get('type') === 'series' ? 'series' : 'movie';
       const out = await info(u.searchParams.get('title') || '', u.searchParams.get('year') || '', type);
       if (!out) { res.writeHead(404); return res.end(); }
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' });
       return res.end(JSON.stringify(out));
     } catch (e) { res.writeHead(502); return res.end(); }
   }
