@@ -345,4 +345,6 @@ function refreshAll(){if(rfBusy||document.getElementById('splash'))return;rfBusy
  qe.addEventListener('animationiteration',function(){if(fin)return;qi=(qi+1)%Q.length;qe.textContent=Q[qi]})
 })();
 document.addEventListener('visibilitychange',function(){if(document.hidden&&s.lockOn){s.lk=1;render()}});
+(function(){var sh=null;function on(){if(!s.swh||sh)return;sh=document.createElement('div');sh.style.cssText='position:fixed;inset:0;z-index:200;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(127,127,127,.35)';document.body.appendChild(sh)}function off(){if(sh){sh.remove();sh=null}}
+window.addEventListener('blur',on);window.addEventListener('focus',off);document.addEventListener('visibilitychange',function(){document.hidden?on():off()})})();
 </script></body></html>
