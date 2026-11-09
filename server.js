@@ -9,6 +9,7 @@ const KEY = process.env.TMDB_API_KEY || '';
 const OMDB = process.env.OMDB_API_KEY || '';
 const cache = new Map();
 const infoCache = new Map();
+let providerLogos = null;
 
 function getJSON(url) {
   return new Promise((resolve, reject) => {
@@ -78,6 +79,23 @@ http.createServer(async (req, res) => {
       if (!out) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' });
       return res.end(JSON.stringify(out));
+    } catch (e) { res.writeHead(502); return res.end(); }
+  }
+  if (u.pathname === '/api/providers') {
+    if (!KEY) { res.writeHead(404); return res.end(); }
+    try {
+      if (!providerLogos) {
+        const out = {};
+        for (const kind of ['movie', 'tv']) {
+          const d = await getJSON(`https://api.themoviedb.org/3/watch/providers/${kind}?api_key=${KEY}&watch_region=US`);
+          for (const r of d.results || []) {
+            if (r.logo_path && !out[r.provider_id]) out[r.provider_id] = `https://image.tmdb.org/t/p/w154${r.logo_path}`;
+          }
+        }
+        providerLogos = out;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' });
+      return res.end(JSON.stringify(providerLogos));
     } catch (e) { res.writeHead(502); return res.end(); }
   }
   if (u.pathname === '/api/poster') {
