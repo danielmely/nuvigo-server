@@ -79,13 +79,13 @@ function art(x){return x[2]==='dl'?Object.keys(s.dl).map(Number):x[2]}
 function card(x,k){var ks=art(x),has=ks.length>0;return '<div class="cat'+(has?'':' plain')+'" data-cat="'+k+'">'+(has?mosaic(ks):'')+'<div class="ib"><span class="em" aria-hidden="true">'+x[1]+'</span></div><div><b>'+x[0]+'</b>'+(x[3]?'<span>'+x[3]+'</span>':'')+'</div></div>'}
 function browse(){
  if(s.cat!==null){var n=s.cat<10?CATS[s.cat][0]:MORE[s.cat-10][0];
-  var hd='<div class="back" data-cb="1"><i class="ti ti-chevron-left" aria-hidden="true"></i> Browse</div><div class="h" style="padding-top:0">'+n+'</div>';
+  var hd='<div class="back" data-cb="1"><i class="ti ti-chevron-left" aria-hidden="true"></i> Dashboard</div><div class="h" style="padding-top:0">'+n+'</div>';
   if(n=='Continue watching'||n=='Watchlist'||n=='Downloads'||n=='Home Library')return hd+grid(MOV.slice(0,3));
   if(n=='Coming up')return hd+['Glass Season · S2 E4|Fri','Low Tide · S1 E8|Sat','Glass Season · S2 E5|Next Fri'].map(function(x){var p=x.split('|');return '<div class="row"><span>'+p[0]+'</span><span style="color:var(--text2)">'+p[1]+'</span></div>'}).join('');
   if(n=='New releases')return hd+grid(MOV.filter(function(m){return m[1]!='Series'&&m[2]>=2025}).sort(function(a,b){return b[2]-a[2]}));
   var l=MOV.filter(function(m,k){return n=='Movies'?m[1]!='Series':n=='Series'?m[1]=='Series':k%2==s.cat%2||k<4});
   return hd+'<div class="sw">'+['All','Newest','Top rated'].map(function(x){return '<span class="pill '+(s.f==x?'on':'')+'" data-f="'+x+'">'+x+'</span>'}).join('')+'</div>'+grid(s.f=='Newest'?l.slice().sort(function(a,b){return b[2]-a[2]}):l)}
- return '<div class="bw">'+ban()+'<div class="h">Browse</div><div class="cats">'+CATS.map(function(x,k){return card(x,k)}).join('')+'</div><div class="sec" style="padding-top:0">More</div><div class="more">'+MORE.map(function(x,k){return card(x,k+10)}).join('')+'</div></div>'}
+ return '<div class="bw">'+ban()+'<div class="h">Dashboard</div><div class="cats">'+CATS.map(function(x,k){return card(x,k)}).join('')+'</div><div class="sec" style="padding-top:0">More</div><div class="more">'+MORE.map(function(x,k){return card(x,k+10)}).join('')+'</div></div>'}
 var SVC=[['Netflix','#e50914,#730008'],['Apple TV+','#404040,#0a0a0a'],['Prime Video','#00a8e0,#00478c'],['Disney+','#123399,#05124d'],['Max','#5a29d9,#1f0d73'],['Hulu','#1ce783,#05733f'],['Paramount+','#0064ff,#002a8c'],['Peacock','#f2bf00,#994d00'],['Crunchyroll','#f57521,#9e3805'],['Starz','#292929,#000'],['AMC+','#000,#40404d'],['MGM+','#cc9e1a,#594000'],['Discovery+','#0059f2,#001f73'],['Shudder','#bf0000,#2e0000'],['Tubi','#fa5933,#731a66'],['Pluto TV','#f2d900,#402e8c']];
 var GEN=[['Action','💥'],['Adventure','🧭'],['Animation','🎨'],['Comedy','😂'],['Crime','🕵️'],['Documentary','🎥'],['Drama','🎭'],['Family','👨‍👩‍👧'],['Fantasy','🧙'],['History','🏛️'],['Horror','👻'],['Kids','🧸'],['Music','🎵'],['Mystery','🔍'],['News','📰'],['Reality','📸'],['Romance','💕'],['Sci-Fi','🚀'],['Talk Show','🎙️'],['Thriller','😱'],['War','🪖'],['Western','🤠']];
 function search(){
@@ -114,7 +114,7 @@ function render(){var h;
  else if(s.tab=='dl')h=dls();
  else h=acct();
  document.getElementById('scr').innerHTML=h;
- var tabs=[['browse','ti-layout-grid','Browse'],['search','ti-search','Search'],['addons','ti-puzzle','Add-Ons'],['dl','ti-download','Downloads'],['acct','ti-user-circle','Account']];
+ var tabs=[['browse','ti-layout-grid','Dashboard'],['search','ti-search','Search'],['addons','ti-puzzle','Add-Ons'],['dl','ti-download','Downloads'],['acct','ti-user-circle','Account']];
  document.getElementById('bar').innerHTML=tabs.map(function(t){return '<button data-tab="'+t[0]+'" class="'+(s.tab==t[0]?'on':'')+'"><i class="ti '+t[1]+'" aria-hidden="true"></i><span class="lb">'+t[2]+'</span></button>'}).join('');
  fit();
  var q=document.getElementById('q');if(q){q.addEventListener('input',function(e){s.q=e.target.value;var p=e.target.selectionStart;render();var n=document.getElementById('q');n.focus();n.setSelectionRange(p,p)})}}
