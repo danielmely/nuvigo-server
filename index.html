@@ -88,7 +88,7 @@ var MOV=[['Inception','Sci-fi',2010],['Sinners','Horror',2025],['The Dark Knight
 var CATS=[['Continue watching','▶️',[3,0],'2 in progress'],['Trending','🔥',[1,5,2,9],''],['Popular','⭐️',[10,15,14,16],''],['Movies','🎬',[17,18,19,20],''],['Series','📺',[6,7,11],''],['Watchlist','🍿','wl',''],['Anime','🎌',[4,280,281,282],'']];
 var MORE=[['Already watched','✅','w','Rate and get picks'],['Coming up','📆',[12,23,24],'New episodes'],['New releases','✨',[8,13,21,22],'Recent movies'],['Downloads','📲','dl','Saved offline'],['Home Library','📀',[26,27,28,29],'Your server']];
 
-var DEFORD=[0,1,2,3,4,6,10,5,11,12,13,14],ORD=DEFORD.slice();
+var DEFORD=[0,1,2,3,4,5,10,6,11,12,13,14],ORD=DEFORD.slice();
 function cardAt(i){return i<10?CATS[i]:MORE[i-10]}
 function ordTitles(){return ORD.map(function(i){return cardAt(i)[0]})}
 function ordApply(t){if(!t||!t.length)return;var rank={};t.forEach(function(n,k){rank[n]=k});ORD=DEFORD.slice().sort(function(a,b){var ra=rank[cardAt(a)[0]],rb=rank[cardAt(b)[0]];return (ra===undefined?100+DEFORD.indexOf(a):ra)-(rb===undefined?100+DEFORD.indexOf(b):rb)})}
