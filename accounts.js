@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const KEYS = ['addons', 'progress', 'settings', 'links']; // what an account syncs
+const KEYS = ['addons', 'progress', 'settings', 'links', 'watched']; // what an account syncs
 const MAX_BODY = 1024 * 1024;
 const TOKEN_DAYS = 90;
 
