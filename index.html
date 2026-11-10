@@ -95,6 +95,7 @@ function rated(k){var m=MOV[k];if(RM[m[0]])return RM[m[0]];if(k%41==3)return 'Un
 function hidK(k){var r=rated(k);return !!((s.hid&&s.hid[r])||(s.prof=='Kids'&&(r=='PG-13'||r=='R'||r=='NC-17'||r=='Unrated')))}
 var RCL=['G','PG','PG-13','R','NC-17','Unrated'];
 function hidSave(){try{localStorage.setItem('nuvigo-hid',JSON.stringify(s.hid))}catch(e){}}
+var HIDE_MS=true; // test: hide the Movies and Series cards on the dashboard (set false to bring them back)
 var DEFORD=[0,2,3,4,1,6,12,11,5,10,13,14],ORD=DEFORD.slice();
 function cardAt(i){return i<10?CATS[i]:MORE[i-10]}
 function ordTitles(){return ORD.map(function(i){return cardAt(i)[0]})}
@@ -156,7 +157,7 @@ function browse(){
   if(n=='New releases')return hd+grid(MOV.filter(function(m){return m[1]!='Series'&&m[2]>=2024}).sort(function(a,b){return b[2]-a[2]}));
   var l=MOV.filter(function(m,k){return n=='Anime'?m[1]=='Animation':n=='Movies'?m[1]!='Series':n=='Series'?m[1]=='Series':k%2==s.cat%2||k<4});
   return hd+'<div class="sw">'+['All','Newest','Top rated'].map(function(x){return '<span class="pill '+(s.f==x?'on':'')+'" data-f="'+x+'">'+x+'</span>'}).join('')+'</div>'+grid(s.f=='Newest'?l.slice().sort(function(a,b){return b[2]-a[2]}):l)}
- var top=ORD.slice(0,6),rest=ORD.slice(6),ex=rest.filter(function(i){return !isStore(i)}),st=rest.filter(isStore),cd=function(i){return card(cardAt(i),i)};
+ var top=ORD.slice(0,6).filter(function(i){return !(HIDE_MS&&(i==3||i==4))}),rest=ORD.slice(6),ex=rest.filter(function(i){return !isStore(i)}),st=rest.filter(isStore),cd=function(i){return card(cardAt(i),i)};
  return '<div class="bw"><div class="top">'+ban()+'<div class="cats" id="g0" style="padding-top:14px">'+top.map(cd).join('')+'</div></div>'+(ex.length?'<hr class="sep"><div class="more" id="g1">'+ex.map(cd).join('')+'</div>':'')+(st.length?'<hr class="sep"><div class="more" id="g2">'+st.map(cd).join('')+'</div>':'')+'</div>'}
 var SVC=[['Netflix','#e50914,#730008',8],['Apple TV+','#404040,#0a0a0a',350],['Prime Video','#00a8e0,#00478c',9],['Disney+','#123399,#05124d',337],['Max','#5a29d9,#1f0d73',1899],['Hulu','#1ce783,#05733f',15],['Paramount+','#0064ff,#002a8c',531],['Peacock','#f2bf00,#994d00',386],['Crunchyroll','#f57521,#9e3805',283],['Starz','#292929,#000',43],['AMC+','#000,#40404d',526],['MGM+','#cc9e1a,#594000',583],['Discovery+','#0059f2,#001f73',520],['Shudder','#bf0000,#2e0000',99],['Tubi','#fa5933,#731a66',73],['Pluto TV','#f2d900,#402e8c',300]];
 var GEN=[['Action','💥'],['Adventure','🧭'],['Animation','🎨'],['Comedy','😂'],['Crime','🕵️'],['Documentary','🎥'],['Drama','🎭'],['Family','👨‍👩‍👧'],['Fantasy','🧙'],['History','🏛️'],['Horror','👻'],['Kids','🧸'],['Music','🎵'],['Mystery','🔍'],['News','📰'],['Reality','📸'],['Romance','💕'],['Sci-Fi','🚀'],['Talk Show','🎙️'],['Thriller','😱'],['War','🪖'],['Western','🤠']];
