@@ -23,3 +23,9 @@ Passwords are hashed with bcrypt. Synced logins (`links`) are encrypted at rest 
 There's no password reset yet (that needs an email service).
 
 `npm test` runs the account tests against an in-memory database.
+
+## Error reports
+
+The app sends short anonymous error messages to `POST /api/report` (no account, email, watch history or links). They are printed in the Railway logs and, if `DATABASE_URL` is set, saved to an `error_reports` table.
+
+To read them, set an `ADMIN_KEY` variable on Railway and open `/api/reports?key=YOUR_KEY` (or send it as an `x-admin-key` header). Without `ADMIN_KEY` the list is disabled and you can still read reports in the logs.
