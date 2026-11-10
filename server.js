@@ -3,6 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const accounts = require('./accounts');
+const reports = require('./reports');
 
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const KEY = process.env.TMDB_API_KEY || '';
@@ -57,18 +58,26 @@ async function info(title, year, type) {
 
 // Accounts need DATABASE_URL and JWT_SECRET; without them the demo still runs and /api/auth/* says so.
 let acc = null;
-if (process.env.DATABASE_URL && process.env.JWT_SECRET) {
+let pool = null;
+if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
-  const pool = new Pool({
+  pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: /railway\.internal|localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL) ? false : { rejectUnauthorized: false },
   });
+}
+if (pool && process.env.JWT_SECRET) {
   acc = accounts.create({ query: (t, p) => pool.query(t, p), secret: process.env.JWT_SECRET });
   acc.init().then(() => console.log('accounts ready')).catch((e) => { console.error('accounts init failed', e); acc = null; });
 }
 
+// Error reports work with or without a database. ADMIN_KEY protects GET /api/reports.
+const rep = reports.create({ query: pool ? (t, p) => pool.query(t, p) : null, adminKey: process.env.ADMIN_KEY || '' });
+rep.init().then(() => pool && console.log('reports ready')).catch((e) => console.error('reports init failed', e.message));
+
 http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
+  if ((u.pathname === '/api/report' || u.pathname === '/api/reports') && (await rep.handle(req, res, u))) return;
   if (u.pathname === '/api/me' || u.pathname.startsWith('/api/auth/') || u.pathname.startsWith('/api/sync')) {
     if (!acc) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end('{"error":"Accounts are not set up on this server yet."}'); }
     if (await acc.handle(req, res, u)) return;
