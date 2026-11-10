@@ -33,7 +33,7 @@ const PAGES = {
           'Apple, which handles App Store purchases, including optional tips, and iCloud sync. We do not receive your payment details.',
         ])),
       sec('How long we keep things',
-        'Account data is kept until you delete your account. Error reports are kept only as long as we need them to fix bugs. You can delete your account at any time in the Account tab (Delete account). That removes your email, password hash and all synced data from our server.'),
+        'Account data is kept until you delete your account. Anonymous error reports are deleted automatically after 90 days. You can delete your account at any time in the Account tab (Delete account). That removes your email, password hash and all synced data from our server.'),
       sec('Your choices and rights',
         `You can use NuviGo without an account, turn off error reports, clear your data, and delete your account in the app. Depending on where you live, you may also have the right to ask what we hold about you, to correct or delete it, or to object to certain uses. Email us at <a href="mailto:${EMAIL}">${EMAIL}</a> and we will respond.`),
       sec('Children',

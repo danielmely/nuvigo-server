@@ -43,3 +43,10 @@ test('listing needs the admin key', async () => {
   await r.handle(fakeReq('GET', ''), res, url('/api/reports?key=secret')); assert.equal(res.code, 200);
   assert.equal(JSON.parse(res.body)[0].message, 'hello');
 });
+
+test('purge deletes reports older than 90 days', async () => {
+  const calls = [];
+  const r = reports.create({ query: async (sql, args) => { calls.push([sql, args]); return { rows: [] }; }, adminKey: 'k' });
+  await r.init();
+  assert.ok(calls.some(([sql, args]) => /DELETE FROM error_reports/.test(sql) && args[0] === '90'));
+});

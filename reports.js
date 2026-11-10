@@ -4,6 +4,7 @@
 const MAX_BODY = 8 * 1024;
 const KEEP = 500;
 const PER_HOUR = 30;
+const KEEP_DAYS = 90;
 
 function clip(v, n) {
   return typeof v === 'string' ? v.replace(/[\u0000-\u001f]+/g, ' ').slice(0, n) : '';
@@ -22,6 +23,15 @@ function create({ query, adminKey }) {
       kind TEXT, message TEXT, context TEXT, app TEXT, os TEXT, device TEXT
     )`);
     ready = true;
+    await purge();
+    setInterval(purge, 24 * 3600e3).unref();
+  }
+
+  // Reports are deleted after KEEP_DAYS days.
+  async function purge() {
+    if (!ready) return;
+    try { await query(`DELETE FROM error_reports WHERE created_at < now() - ($1 || ' days')::interval`, [String(KEEP_DAYS)]); }
+    catch (e) { console.error('report purge failed', e.message); }
   }
 
   function limited(ip) {
@@ -81,7 +91,7 @@ function create({ query, adminKey }) {
     return false;
   }
 
-  return { init, handle, _recent: recent };
+  return { init, handle, purge, _recent: recent };
 }
 
 module.exports = { create };
