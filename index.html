@@ -333,9 +333,10 @@ var hist=['browse'],hi=0,swNav=0;
   // swipe right = go back (arrow on the left); swipe left = forward (arrow on the right)
   var ni=hi+(dx>0?-1:1),has=ni>=0&&ni<hist.length;
   cl.style.opacity=on&&dx>0?(has?a:a*0.35):0;cr.style.opacity=on&&dx<0?(has?a:a*0.35):0;
-  cl.style.transform=cr.style.transform='scale('+(0.7+0.3*a)+')';
+  cl.style.transform=cr.style.transform='scale('+(0.7+0.3*a)+')';cueOn=on;
   sc.style.transition='none';sc.style.transform=on?'translateX('+(dx*(has?0.35:0.12))+'px)':''}
- function cueOff(){var sc=document.getElementById('scr');sc.style.transition='transform .2s ease';sc.style.transform='';cl.style.opacity=cr.style.opacity=0}
+ var cueOn=false;
+ function cueOff(){if(!cueOn)return;cueOn=false;var sc=document.getElementById('scr');sc.style.transition='transform .2s ease';sc.style.transform='';cl.style.opacity=cr.style.opacity=0}
  app.addEventListener('touchmove',function(e){if(!ok||dragEl)return;var t=e.touches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*1.5){cueOff();return}cue(dx)},{passive:true});
  app.addEventListener('touchcancel',cueOff,{passive:true});
  app.addEventListener('touchend',function(e){cueOff();if(!ok||dragEl)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)<80||Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*2||Date.now()-t0>700)return;
