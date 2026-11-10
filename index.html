@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>NuviGo demo</title>
 <style>/*!
  * Tabler Icons 3.19.0 by tabler - https://tabler.io
@@ -16,7 +16,7 @@ html[data-theme=dark]{--pa:#B080FF;--on-pa:#1a0b33;--bg:#161615;--surface:#22222
 html #splash .qt{color:rgba(0,0,0,.72)}html #splash .st{color:rgba(0,0,0,.55)}html #splash .pb{background:rgba(0,0,0,.12)}
 @media(prefers-color-scheme:dark){html:not([data-theme=light]) #splash{background:#363A43}html:not([data-theme=light]) #splash .lgl{display:none!important}html:not([data-theme=light]) #splash .lgd{display:block!important}html:not([data-theme=light]) #splash .qt{color:rgba(255,255,255,.85)}html:not([data-theme=light]) #splash .st{color:rgba(255,255,255,.6)}html:not([data-theme=light]) #splash .pb{background:rgba(255,255,255,.16)}}
 html[data-theme=dark] #splash{background:#363A43}html[data-theme=dark] #splash .lgl{display:none!important}html[data-theme=dark] #splash .lgd{display:block!important}html[data-theme=dark] #splash .qt{color:rgba(255,255,255,.85)}html[data-theme=dark] #splash .st{color:rgba(255,255,255,.6)}html[data-theme=dark] #splash .pb{background:rgba(255,255,255,.16)}
-#splash.rf .qt{display:none}html,body{overscroll-behavior-y:none}.scr{overscroll-behavior-y:contain}#splash.out{opacity:0;pointer-events:none}
+#splash.rf .qt{display:none}html,body{overscroll-behavior-y:none;touch-action:manipulation;-webkit-text-size-adjust:100%}.scr{overscroll-behavior-y:contain}#splash.out{opacity:0;pointer-events:none}
 #splash .lg{display:flex;flex-direction:column;align-items:center;gap:18px;font-size:30px;font-weight:700}
 #splash .qt{color:rgba(255,255,255,.85);font-style:italic;font-size:15px;text-align:center;max-width:300px;height:64px;padding:0 12px;opacity:0;will-change:opacity;animation:qf 2.8s ease-in-out infinite}@keyframes qf{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
 #splash .pb{width:240px;height:6px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}
@@ -73,7 +73,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 -apple-system
 .tg.on{background:var(--pa)}.tg:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff}
 .tg.on:after{left:18px}
 .pr{height:4px;background:var(--border);border-radius:2px;margin-top:6px}.pr>div{height:4px;background:var(--pa);border-radius:2px}
-input{font:inherit;color:var(--text);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px}
+input,select,textarea{font-size:16px!important}input{font:inherit;color:var(--text);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px}
 .sg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
 .svc{height:64px;border-radius:14px;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;gap:10px;padding:0 10px;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .gen{height:46px;border-radius:12px;background:rgba(176,128,255,.16);display:flex;align-items:center;gap:8px;padding:0 10px;font-weight:600;font-size:13px;cursor:pointer}
@@ -353,6 +353,8 @@ function refreshAll(){if(rfBusy||document.getElementById('splash'))return;rfBusy
  var qe=document.getElementById('qt'),qi=0;qe.textContent=Q[0];
  qe.addEventListener('animationiteration',function(){if(fin)return;qi=(qi+1)%Q.length;qe.textContent=Q[qi]})
 })();
+['gesturestart','gesturechange','gestureend'].forEach(function(g){document.addEventListener(g,function(e){e.preventDefault()},{passive:false})});
+document.addEventListener('dblclick',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('visibilitychange',function(){if(document.hidden&&s.lockOn){s.lk=1;render()}});
 (function(){var sh=null;function on(){if(!s.swh||sh)return;sh=document.createElement('div');sh.style.cssText='position:fixed;inset:0;z-index:200;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(127,127,127,.35)';document.body.appendChild(sh)}function off(){if(sh){sh.remove();sh=null}}
 window.addEventListener('blur',on);window.addEventListener('focus',off);document.addEventListener('visibilitychange',function(){document.hidden?on():off()})})();
