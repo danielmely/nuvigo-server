@@ -275,7 +275,7 @@ document.querySelector('.app').addEventListener('click',function(e){if(Date.now(
  if(d.si!==undefined){s.sheet=null;s.rate=null;s.det=+d.si;render();return}
  if(d.more!==undefined){LIM+=30;render();return}
  LIM=30;
- if(d.tab){s.how=0;s.disc=0;s.tab=d.tab;s.det=null;s.play=null;s.cat=null;s.sg=null;s.f='All';render();return}
+ if(d.tab){s.how=0;s.disc=0;if(!swNav&&hist[hi]!==d.tab){hist=hist.slice(0,hi+1);hist.push(d.tab);hi=hist.length-1}s.tab=d.tab;s.det=null;s.play=null;s.cat=null;s.sg=null;s.f='All';render();return}
  if(d.pback!==undefined){s.play=null}
  else if(d.back!==undefined){s.det=null}
  else if(d.sg){s.sg=d.sg;s.f='Movies'}
@@ -322,6 +322,13 @@ try{var sv=localStorage.getItem('nuvigo-theme');if(sv&&sv!='system'){s.theme=sv;
 render();
 window.addEventListener('resize',fit);
 var dragEl=null,lpT=null,lpX=0,lpY=0,noClick=0;
+var hist=['browse'],hi=0,swNav=0;
+(function(){var app=document.querySelector('.app'),x0=0,y0=0,t0=0,ok=false;
+ function hscroll(el){while(el&&el!==app){if(el.scrollWidth>el.clientWidth+4){var o=getComputedStyle(el).overflowX;if(o=='auto'||o=='scroll')return true}el=el.parentNode}return false}
+ app.addEventListener('touchstart',function(e){var tg=e.target;ok=e.touches.length==1&&s.play===null&&!dragEl&&!tg.closest('input,textarea,.zm,.pw,.sh,.lift')&&!hscroll(tg);var t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now()},{passive:true});
+ app.addEventListener('touchend',function(e){if(!ok||dragEl)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)<80||Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*2||Date.now()-t0>700)return;
+  var ni=hi+(dx>0?-1:1);if(ni<0||ni>=hist.length)return;var want=hist[ni],b=document.querySelector('[data-tab="'+want+'"]');if(!b)return;swNav=1;b.click();swNav=0;if(s.tab==want)hi=ni},{passive:true})})();
+
 (function(){var scr=document.getElementById('scr');
  function swap(a,b){var pa=a.parentNode,pb=b.parentNode,ma=document.createElement('i'),mb=document.createElement('i');pa.replaceChild(ma,a);pb.replaceChild(mb,b);pa.replaceChild(b,ma);pb.replaceChild(a,mb)}
  scr.addEventListener('touchstart',function(e){var el=e.target.closest('.cw[data-cat]');if(!el||s.cat!==null)return;var t=e.touches[0];lpX=t.clientX;lpY=t.clientY;clearTimeout(lpT);
