@@ -37,7 +37,7 @@ html[data-theme=dark] #splash{background:#363A43}html[data-theme=dark] #splash .
 .more-btn{margin:6px 14px 16px;padding:10px;text-align:center;border:0.5px solid var(--border);border-radius:12px;color:var(--pa);cursor:pointer}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 -apple-system,system-ui,sans-serif;display:flex;justify-content:center}
-.app{width:100%;max-width:430px;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--surface-1);padding:8px}
+.app{width:100%;max-width:430px;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--surface-1);padding:8px;position:relative;overflow-x:clip}
 .scr{flex:1;min-height:0;background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow-y:auto;position:relative}
 .bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:0.5px solid var(--border);margin-top:8px}
 .bar button{border:0;border-radius:0;background:transparent;padding:8px 0 2px;margin:0;min-width:0;width:100%;color:var(--text2);text-align:center;overflow:hidden;display:flex;flex-direction:column;align-items:center;font:inherit;cursor:pointer}
@@ -337,19 +337,36 @@ var hist=['browse'],hi=0,swNav=0;
 (function(){var app=document.querySelector('.app'),x0=0,y0=0,t0=0,ok=false;
  function hscroll(el){while(el&&el!==app){if(el.scrollWidth>el.clientWidth+4){var o=getComputedStyle(el).overflowX;if(o=='auto'||o=='scroll')return true}el=el.parentNode}return false}
  app.addEventListener('touchstart',function(e){var tg=e.target;ok=e.touches.length==1&&s.play===null&&!dragEl&&!tg.closest('input,textarea,.zm,.pw,.sh,.lift')&&!hscroll(tg);var t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now()},{passive:true});
- var cl=document.createElement('div'),cr=document.createElement('div');cl.className='swc l';cr.className='swc r';cl.innerHTML='<i class="ti ti-chevron-left" aria-hidden="true"></i>';cr.innerHTML='<i class="ti ti-chevron-right" aria-hidden="true"></i>';document.body.appendChild(cl);document.body.appendChild(cr);
- function cue(dx,can){var a=Math.min(Math.abs(dx)/90,1),sc=document.getElementById('scr');var on=ok&&a>0.12&&Math.abs(dx)>20;
-  // swipe right = go back (arrow on the left); swipe left = forward (arrow on the right)
-  var ni=hi+(dx>0?-1:1),has=ni>=0&&ni<hist.length;
-  cl.style.opacity=on&&dx>0?(has?a:a*0.35):0;cr.style.opacity=on&&dx<0?(has?a:a*0.35):0;
-  cl.style.transform=cr.style.transform='scale('+(0.7+0.3*a)+')';cueOn=on;
-  sc.style.transition='none';sc.style.transform=on?'translateX('+(dx*(has?0.35:0.12))+'px)':''}
- var cueOn=false;
- function cueOff(){if(!cueOn)return;cueOn=false;var sc=document.getElementById('scr');sc.style.transition='transform .2s ease';sc.style.transform='';cl.style.opacity=cr.style.opacity=0}
- app.addEventListener('touchmove',function(e){if(!ok||dragEl)return;var t=e.touches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*1.5){cueOff();return}cue(dx)},{passive:true});
+ // Page-slide swipe: the whole page follows the finger and the next page slides in beside it.
+ var BUILD={browse:browse,search:search,addons:addons,dl:dls,acct:acct,tips:tips},pk=null,pkWant=null,cueOn=false,sliding=false;
+ function wantFor(dx){var ni=hi+(dx>0?-1:1);return ni>=0&&ni<hist.length?hist[ni]:null}
+ function peek(want,dir){var sc=document.getElementById('scr');
+  if(pk&&pkWant===want){return}
+  if(pk){pk.remove();pk=null}pkWant=want;if(!want||!BUILD[want])return;
+  var html='';try{html=BUILD[want]()}catch(e){return}
+  pk=document.createElement('div');pk.className='scr pk';pk.innerHTML=html;
+  pk.style.cssText='position:absolute;z-index:5;pointer-events:none;left:'+sc.offsetLeft+'px;top:'+sc.offsetTop+'px;width:'+sc.offsetWidth+'px;height:'+sc.offsetHeight+'px;overflow:hidden;transition:none';
+  sc.parentNode.appendChild(pk)}
+ function place(dx){var sc=document.getElementById('scr'),W=sc.offsetWidth,want=wantFor(dx);
+  peek(want,dx>0?-1:1);
+  sc.style.transition='none';sc.style.transform='translateX('+(want?dx:dx*0.2)+'px)';
+  if(pk)pk.style.transform='translateX('+(dx>0?dx-W:dx+W)+'px)';cueOn=true}
+ function reset(done){var sc=document.getElementById('scr');sc.style.transition='transform .2s ease';sc.style.transform='';if(pk){pk.style.transition='transform .2s ease';pk.style.transform='translateX('+(pk.style.transform.indexOf('-')>-1?'-':'')+sc.offsetWidth+'px)'}
+  setTimeout(function(){if(pk){pk.remove();pk=null;pkWant=null}sc.style.transition='';if(done)done()},210)}
+ function cueOff(){if(!cueOn||sliding)return;cueOn=false;reset()}
+ app.addEventListener('touchmove',function(e){if(!ok||dragEl||sliding)return;var t=e.touches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*1.5||Math.abs(dx)<12){cueOff();return}place(dx)},{passive:true});
  app.addEventListener('touchcancel',cueOff,{passive:true});
- app.addEventListener('touchend',function(e){cueOff();if(!ok||dragEl)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)<80||Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*2||Date.now()-t0>700)return;
-  var ni=hi+(dx>0?-1:1);if(ni<0||ni>=hist.length)return;var want=hist[ni],b=document.querySelector('[data-tab="'+want+'"]');if(!b)return;swNav=1;b.click();swNav=0;if(s.tab==want)hi=ni},{passive:true})})();
+ app.addEventListener('touchend',function(e){if(!ok||dragEl||sliding){return}
+  var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0,sc=document.getElementById('scr'),W=sc.offsetWidth;
+  var want=wantFor(dx),b=want?document.querySelector('[data-tab="'+want+'"]'):null;
+  if(!cueOn||Math.abs(dx)<Math.max(80,W*0.25)||Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*2||!b){cueOn=false;reset();return}
+  // Commit: finish the slide, then switch to the real page underneath.
+  sliding=true;cueOn=false;var ni=hi+(dx>0?-1:1),dir=dx>0?1:-1;
+  sc.style.transition='transform .2s ease';sc.style.transform='translateX('+(dir*W)+'px)';
+  if(pk){pk.style.transition='transform .2s ease';pk.style.transform='translateX(0px)'}
+  setTimeout(function(){swNav=1;b.click();swNav=0;if(s.tab==want)hi=ni;
+   sc=document.getElementById('scr');sc.style.transition='none';sc.style.transform='';sc.scrollTop=0;
+   if(pk){pk.remove();pk=null;pkWant=null}sc.style.transition='';sliding=false},210)},{passive:true})})();
 
 (function(){var scr=document.getElementById('scr');
  function swap(a,b){var pa=a.parentNode,pb=b.parentNode,ma=document.createElement('i'),mb=document.createElement('i');pa.replaceChild(ma,a);pb.replaceChild(mb,b);pa.replaceChild(b,ma);pb.replaceChild(a,mb)}
