@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const accounts = require('./accounts');
 const reports = require('./reports');
+const legal = require('./legal');
 
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const KEY = process.env.TMDB_API_KEY || '';
@@ -82,6 +83,7 @@ http.createServer(async (req, res) => {
     if (!acc) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end('{"error":"Accounts are not set up on this server yet."}'); }
     if (await acc.handle(req, res, u)) return;
   }
+  if (legal.handle(req, res, u.pathname)) return;
   if (u.pathname === '/api/info') {
     if (!OMDB) { res.writeHead(404); return res.end(); }
     try {

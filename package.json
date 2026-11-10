@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node test/accounts.test.js && node --test test/reports.test.js"
+    "test": "node test/accounts.test.js && node --test test/reports.test.js test/legal.test.js"
   },
   "engines": {
     "node": ">=18"
