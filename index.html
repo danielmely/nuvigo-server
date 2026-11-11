@@ -334,12 +334,13 @@ render();
 window.addEventListener('resize',fit);
 var dragEl=null,lpT=null,lpX=0,lpY=0,noClick=0;
 var hist=['browse'],hi=0,swNav=0;
-(function(){var app=document.querySelector('.app'),x0=0,y0=0,t0=0,ok=false;
+(function(){var app=document.querySelector('.app'),x0=0,y0=0,t0=0,ok=false,axis=null;
  function hscroll(el){while(el&&el!==app){if(el.scrollWidth>el.clientWidth+4){var o=getComputedStyle(el).overflowX;if(o=='auto'||o=='scroll')return true}el=el.parentNode}return false}
- app.addEventListener('touchstart',function(e){var tg=e.target;ok=e.touches.length==1&&s.play===null&&!dragEl&&!tg.closest('input,textarea,.zm,.pw,.sh,.lift')&&!hscroll(tg);var t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now()},{passive:true});
+ app.addEventListener('touchstart',function(e){var tg=e.target;ok=e.touches.length==1&&s.play===null&&!dragEl&&!tg.closest('input,textarea,.zm,.pw,.sh,.lift')&&!hscroll(tg);var t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now();axis=null},{passive:true});
  // Page-slide swipe: the whole page follows the finger and the next page slides in beside it.
  var BUILD={browse:browse,search:search,addons:addons,dl:dls,acct:acct,tips:tips},pk=null,pkWant=null,cueOn=false,sliding=false;
- function wantFor(dx){var ni=hi+(dx>0?-1:1);return ni>=0&&ni<hist.length?hist[ni]:null}
+ var ORDER=['browse','search','addons','dl','acct','tips'];
+ function wantFor(dx){var ni=ORDER.indexOf(s.tab)+(dx>0?-1:1);return ni>=0&&ni<ORDER.length?ORDER[ni]:null}
  function peek(want,dir){var sc=document.getElementById('scr');
   if(pk&&pkWant===want){return}
   if(pk){pk.remove();pk=null}pkWant=want;if(!want||!BUILD[want])return;
@@ -354,17 +355,20 @@ var hist=['browse'],hi=0,swNav=0;
  function reset(done){var sc=document.getElementById('scr');sc.style.transition='transform .2s ease';sc.style.transform='';if(pk){pk.style.transition='transform .2s ease';pk.style.transform='translateX('+(pk.style.transform.indexOf('-')>-1?'-':'')+sc.offsetWidth+'px)'}
   setTimeout(function(){if(pk){pk.remove();pk=null;pkWant=null}sc.style.transition='';if(done)done()},210)}
  function cueOff(){if(!cueOn||sliding)return;cueOn=false;reset()}
- app.addEventListener('touchmove',function(e){if(!ok||dragEl||sliding)return;var t=e.touches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*1.5||Math.abs(dx)<12){cueOff();return}place(dx)},{passive:true});
- app.addEventListener('touchcancel',cueOff,{passive:true});
- app.addEventListener('touchend',function(e){if(!ok||dragEl||sliding){return}
+ // Once a drag is judged sideways it stays sideways: up/down scrolling is blocked until the finger lifts.
+ app.addEventListener('touchmove',function(e){if(!ok||dragEl||sliding)return;var t=e.touches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+  if(!axis){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;axis=Math.abs(dx)>Math.abs(dy)*1.5?'h':'v';if(axis=='h')document.getElementById('scr').style.overflowY='hidden'}
+  if(axis!='h')return;if(e.cancelable)e.preventDefault();place(dx)},{passive:false});
+ app.addEventListener('touchcancel',function(){document.getElementById('scr').style.overflowY='';cueOff()},{passive:true});
+ app.addEventListener('touchend',function(e){document.getElementById('scr').style.overflowY='';if(!ok||dragEl||sliding){return}
   var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0,sc=document.getElementById('scr'),W=sc.offsetWidth;
   var want=wantFor(dx),b=want?document.querySelector('[data-tab="'+want+'"]'):null;
-  if(!cueOn||Math.abs(dx)<Math.max(80,W*0.25)||Math.abs(dy)>55||Math.abs(dx)<Math.abs(dy)*2||!b){cueOn=false;reset();return}
+  if(!cueOn||axis!='h'||Math.abs(dx)<Math.max(80,W*0.25)||!b){cueOn=false;reset();return}
   // Commit: finish the slide, then switch to the real page underneath.
-  sliding=true;cueOn=false;var ni=hi+(dx>0?-1:1),dir=dx>0?1:-1;
+  sliding=true;cueOn=false;var dir=dx>0?1:-1;
   sc.style.transition='transform .2s ease';sc.style.transform='translateX('+(dir*W)+'px)';
   if(pk){pk.style.transition='transform .2s ease';pk.style.transform='translateX(0px)'}
-  setTimeout(function(){swNav=1;b.click();swNav=0;if(s.tab==want)hi=ni;
+  setTimeout(function(){swNav=1;b.click();swNav=0;
    sc=document.getElementById('scr');sc.style.transition='none';sc.style.transform='';sc.scrollTop=0;
    if(pk){pk.remove();pk=null;pkWant=null}sc.style.transition='';sliding=false},210)},{passive:true})})();
 
