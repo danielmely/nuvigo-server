@@ -10,17 +10,19 @@ Serves the NuviGo demo and runs NuviGo accounts (sign-up, sign-in and sync).
    - `JWT_SECRET` = a long random string (for example 64 random characters). Keep it private; changing it signs everyone out and makes synced logins unreadable.
    - `TMDB_API_KEY` (optional) = real posters in the demo
    - `OMDB_API_KEY` (optional) = IMDb and Rotten Tomatoes ratings and descriptions in the demo
+   - `RESEND_API_KEY` and `MAIL_FROM` (needed for password reset) = an API key from resend.com and a sender such as `NuviGo <no-reply@nuvigo.app>`. The sender's domain must be verified in Resend.
 4. Settings -> Networking -> Generate Domain. Put that address in the app's `Config.swift` as `serverURL`.
 
 Without `DATABASE_URL` and `JWT_SECRET` the demo still runs and the account routes answer 503.
 
 ## Account API
 - `POST /api/auth/register`, `POST /api/auth/login` with `{email, password}` -> `{token, user}`
+- `POST /api/auth/forgot` with `{email}` emails a 6-digit code (always answers 200, so it can't reveal which emails have accounts); `POST /api/auth/reset` with `{email, code, password}` sets a new password and returns `{token, user}`. Codes last 15 minutes, work once, allow 5 wrong tries, and one email can be requested per minute. Without `RESEND_API_KEY` and `MAIL_FROM` both answer 503.
 - `GET /api/me`, `DELETE /api/me` (body `{password}`)
 - `GET /api/sync`, `PUT /api/sync/{addons|progress|settings|links}` with `{data}`
 
 Passwords are hashed with bcrypt. Synced logins (`links`) are encrypted at rest with a key derived from `JWT_SECRET`.
-There's no password reset yet (that needs an email service).
+Resetting a password does not sign out other devices: their tokens stay valid until they expire (90 days).
 
 `npm test` runs the account tests against an in-memory database.
 

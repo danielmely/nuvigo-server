@@ -5,6 +5,7 @@ const path = require('path');
 const accounts = require('./accounts');
 const reports = require('./reports');
 const legal = require('./legal');
+const mail = require('./mail');
 
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const KEY = process.env.TMDB_API_KEY || '';
@@ -68,7 +69,11 @@ if (process.env.DATABASE_URL) {
   });
 }
 if (pool && process.env.JWT_SECRET) {
-  acc = accounts.create({ query: (t, p) => pool.query(t, p), secret: process.env.JWT_SECRET });
+  acc = accounts.create({
+    query: (t, p) => pool.query(t, p),
+    secret: process.env.JWT_SECRET,
+    sendMail: mail.create({ apiKey: process.env.RESEND_API_KEY, from: process.env.MAIL_FROM }),
+  });
   acc.init().then(() => console.log('accounts ready')).catch((e) => { console.error('accounts init failed', e); acc = null; });
 }
 

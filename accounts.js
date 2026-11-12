@@ -8,7 +8,12 @@ const KEYS = ['addons', 'progress', 'settings', 'links', 'watched']; // what an 
 const MAX_BODY = 1024 * 1024;
 const TOKEN_DAYS = 90;
 
-function create({ query, secret }) {
+const RESET_MINUTES = 15;
+const RESET_MAX_TRIES = 5;
+const RESET_COOLDOWN_SECONDS = 60;
+
+/** sendMail(to, subject, text) is optional; without it password reset answers 503. */
+function create({ query, secret, sendMail = null }) {
   const encKey = crypto.createHash('sha256').update('nuvigo-links:' + secret).digest();
 
   function encrypt(text) {
@@ -37,7 +42,15 @@ function create({ query, secret }) {
       version INTEGER NOT NULL DEFAULT 1,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       PRIMARY KEY (user_id, key))`);
+    await query(`CREATE TABLE IF NOT EXISTS password_resets (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      code_hash TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
   }
+
+  const codeHash = (email, code) => crypto.createHash('sha256').update(`reset:${secret}:${email}:${code}`).digest('hex');
 
   // Simple per-IP limiter for sign-in and sign-up attempts.
   const attempts = new Map();
@@ -108,6 +121,57 @@ function create({ query, secret }) {
         const row = r.rows[0];
         const ok = row ? await bcrypt.compare(password, row.password_hash) : await bcrypt.compare(password, '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvali');
         if (!row || !ok) return fail(res, 401, 'Wrong email or password.'), true;
+        return send(res, 200, { token: sign(row.id), user: { id: row.id, email } }), true;
+      }
+
+      // Forgot password: emails a 6-digit code. Always answers the same, so it can't be used to find out who has an account.
+      if (req.method === 'POST' && p === '/api/auth/forgot') {
+        if (!sendMail) return fail(res, 503, "Password reset isn't set up on this server yet."), true;
+        if (limited(ip)) return fail(res, 429, 'Too many attempts. Try again in a few minutes.'), true;
+        const body = await readBody(req);
+        const email = String(body.email || '').trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return fail(res, 400, 'Enter a valid email address.'), true;
+        const u = (await query('SELECT id FROM users WHERE email = $1', [email])).rows[0];
+        if (u) {
+          const last = (await query('SELECT created_at FROM password_resets WHERE user_id = $1', [u.id])).rows[0];
+          if (!last || Date.now() - new Date(last.created_at).getTime() > RESET_COOLDOWN_SECONDS * 1000) {
+            const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+            const expires = new Date(Date.now() + RESET_MINUTES * 60 * 1000);
+            await query('DELETE FROM password_resets WHERE user_id = $1', [u.id]);
+            await query('INSERT INTO password_resets (user_id, code_hash, expires_at) VALUES ($1, $2, $3)', [u.id, codeHash(email, code), expires]);
+            try {
+              await sendMail(email, 'Your NuviGo password reset code',
+                `Your NuviGo password reset code is ${code}\n\nIt expires in ${RESET_MINUTES} minutes. If you didn't ask for this, you can ignore this email and your password stays the same.`);
+            } catch (e) {
+              console.error('reset mail failed', e.message);
+              await query('DELETE FROM password_resets WHERE user_id = $1', [u.id]);
+            }
+          }
+        }
+        return send(res, 200, { ok: true }), true;
+      }
+
+      // Reset password: needs the emailed code. Signs the person in on success.
+      if (req.method === 'POST' && p === '/api/auth/reset') {
+        if (limited(ip)) return fail(res, 429, 'Too many attempts. Try again in a few minutes.'), true;
+        const body = await readBody(req);
+        const email = String(body.email || '').trim().toLowerCase();
+        const code = String(body.code || '').trim();
+        const password = String(body.password || '');
+        if (password.length < 8 || password.length > 200) return fail(res, 400, 'Use a password with at least 8 characters.'), true;
+        const bad = () => fail(res, 400, 'That code is wrong or has expired. Ask for a new one.');
+        if (!/^\d{6}$/.test(code)) return bad(), true;
+        const row = (await query(
+          'SELECT u.id AS id, r.code_hash AS code_hash, r.expires_at AS expires_at, r.tries AS tries FROM users u JOIN password_resets r ON r.user_id = u.id WHERE u.email = $1', [email])).rows[0];
+        if (!row || new Date(row.expires_at).getTime() < Date.now() || row.tries >= RESET_MAX_TRIES) return bad(), true;
+        const a = Buffer.from(row.code_hash), b = Buffer.from(codeHash(email, code));
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          await query('UPDATE password_resets SET tries = tries + 1 WHERE user_id = $1', [row.id]);
+          return bad(), true;
+        }
+        const hash = await bcrypt.hash(password, 10);
+        await query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, row.id]);
+        await query('DELETE FROM password_resets WHERE user_id = $1', [row.id]);
         return send(res, 200, { token: sign(row.id), user: { id: row.id, email } }), true;
       }
 
