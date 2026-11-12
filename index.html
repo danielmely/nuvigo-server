@@ -154,8 +154,9 @@ function installAddon(u){u=String(u||'').trim().replace(/^stremio:\/\//i,'https:
 var SUGGURL={Cinemeta:'https://v3-cinemeta.strem.io/manifest.json',WatchHub:'https://watchhub.strem.io/manifest.json',OpenSubtitles:'https://opensubtitles-v3.strem.io/manifest.json'};
 
 /* ---- dashboard cards from real catalogs ---- */
-function buildCards(cat){CARDS=[['Continue watching','▶️','cw','Pick up where you left off']].concat(cat,[['Watchlist','🍿','wl',''],['Already watched','✅','w','Rate and get picks'],['Downloads','📲','dl','Saved on this device']]);
- var nc=cat.length,ix=[0],q;for(q=1;q<=Math.min(2,nc);q++)ix.push(q);ix.push(nc+2,nc+3,nc+1);for(q=3;q<=nc;q++)ix.push(q);DEFORD=ix;ORD=DEFORD.slice();try{ordApply(JSON.parse(localStorage.getItem('nuvigo-order')||'null'))}catch(e){}}
+function buildCards(cat){var fe=cat.filter(function(c){return /featured/i.test(c[0])}),po=cat.filter(function(c){return fe.indexOf(c)<0&&/popular/i.test(c[0])}),ot=cat.filter(function(c){return fe.indexOf(c)<0&&po.indexOf(c)<0});if(fe.length||po.length)ot=[];
+ CARDS=[['Continue watching','▶️','cw','Pick up where you left off'],['Watchlist','🍿','wl','']].concat(fe,[['Already watched','✅','w','Rate and get picks'],['Downloads','📲','dl','Saved on this device']],po,ot);
+ DEFORD=CARDS.map(function(_,n){return n});ORD=DEFORD.slice();try{ordApply(JSON.parse(localStorage.getItem('nuvigo-order')||'null'))}catch(e){}}
 function softBrowse(){if(s.tab=='browse'&&s.det===null&&s.play===null&&!dragEl&&!rfBusy)render()}
 function loadCats(){var cat=[],jobs=[];LOADERR=[];
  ADD.forEach(function(a){var m=a[4].m;(m.catalogs||[]).forEach(function(c){if(cat.length>=8||cReq(c).length||!c.type||!c.id)return;
