@@ -9,6 +9,8 @@ const mail = require('./mail');
 
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const KEY = process.env.TMDB_API_KEY || '';
+const discoverCache = new Map();
+const imdbIds = new Map();
 const OMDB = process.env.OMDB_API_KEY || '';
 const cache = new Map();
 const infoCache = new Map();
@@ -114,6 +116,40 @@ http.createServer(async (req, res) => {
       }
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' });
       return res.end(JSON.stringify(providerLogos));
+    } catch (e) { res.writeHead(502); return res.end(); }
+  }
+  // Popular titles on one streaming service (TMDB watch-provider id), for the Search tab's service cards.
+  // Titles come back keyed by IMDb id, because add-ons use IMDb ids.
+  if (u.pathname === '/api/discover') {
+    if (!KEY) { res.writeHead(404); return res.end(); }
+    const provider = parseInt(u.searchParams.get('provider') || '', 10);
+    const tv = u.searchParams.get('tv') === '1';
+    const page = Math.min(5, Math.max(1, parseInt(u.searchParams.get('page') || '1', 10) || 1));
+    if (!provider) { res.writeHead(400); return res.end(); }
+    const ck = `${provider}:${tv ? 'tv' : 'movie'}:${page}`;
+    const hit = discoverCache.get(ck);
+    if (hit && Date.now() - hit.t < 3600e3) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' });
+      return res.end(hit.body);
+    }
+    try {
+      const kind = tv ? 'tv' : 'movie';
+      const d = await getJSON(`https://api.themoviedb.org/3/discover/${kind}?api_key=${KEY}&sort_by=popularity.desc&include_adult=false&page=${page}&with_watch_providers=${provider}&watch_region=US&with_watch_monetization_types=${encodeURIComponent('flatrate|free|ads')}`);
+      const items = await Promise.all((d.results || []).slice(0, 20).map(async (r) => {
+        let imdb = imdbIds.get(`${kind}:${r.id}`);
+        if (imdb === undefined) {
+          try { imdb = (await getJSON(`https://api.themoviedb.org/3/${kind}/${r.id}/external_ids?api_key=${KEY}`)).imdb_id || null; } catch (e) { imdb = null; }
+          imdbIds.set(`${kind}:${r.id}`, imdb);
+        }
+        if (!imdb) return null;
+        const date = r.release_date || r.first_air_date || '';
+        return { id: imdb, type: tv ? 'series' : 'movie', name: r.title || r.name || '', year: date.slice(0, 4),
+                 poster: r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : null };
+      }));
+      const body = JSON.stringify(items.filter(Boolean));
+      discoverCache.set(ck, { t: Date.now(), body });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' });
+      return res.end(body);
     } catch (e) { res.writeHead(502); return res.end(); }
   }
   if (u.pathname === '/api/poster') {
